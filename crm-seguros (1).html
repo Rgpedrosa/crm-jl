@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CRM Corretora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --bg:#EEF1EF;
+  --paper:#FFFFFF;
+  --ink:#1B2A3C;
+  --ink-soft:#5C6B78;
+  --ink-faint:#93A0AA;
+  --line:#DBE1DD;
+  --teal:#2F6F62;
+  --teal-soft:#E4EFEC;
+  --amber:#C98A3B;
+  --amber-soft:#F7EBDA;
+  --red:#B4463A;
+  --red-soft:#F6E4E1;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;font-size:14px;}
+h1,h2,h3{font-family:'Source Serif 4',serif;font-weight:600;margin:0;}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+.sidebar{background:var(--ink);color:#EDF1F0;padding:24px 16px;display:flex;flex-direction:column;gap:4px;}
+.brand{font-family:'Source Serif 4',serif;font-size:19px;color:#fff;margin-bottom:22px;padding:0 8px;}
+.brand span{color:var(--amber);}
+.nav-item{padding:10px 12px;border-radius:8px;cursor:pointer;color:#B9C4C1;font-size:13.5px;display:flex;align-items:center;gap:8px;transition:.15s;}
+.nav-item:hover{background:#25384A;color:#fff;}
+.nav-item.active{background:var(--teal);color:#fff;}
+.nav-count{margin-left:auto;background:rgba(255,255,255,.15);padding:1px 7px;border-radius:20px;font-size:11px;}
+main{padding:28px 34px;overflow-x:auto;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+.topbar h1{font-size:24px;}
+.topbar .sub{color:var(--ink-soft);font-size:13px;margin-top:2px;}
+button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:7px;padding:9px 16px;font-size:13.5px;font-weight:600;}
+.btn-primary{background:var(--ink);color:#fff;}
+.btn-primary:hover{background:#2A3E52;}
+.btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+.btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink);}
+.btn-danger{background:var(--red-soft);color:var(--red);}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;}
+.grid-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat{padding:16px 18px;}
+.stat .num{font-family:'Source Serif 4',serif;font-size:28px;}
+.stat .label{color:var(--ink-soft);font-size:12.5px;margin-top:2px;}
+.stat.red .num{color:var(--red);}
+.stat.amber .num{color:var(--amber);}
+.stat.teal .num{color:var(--teal);}
+
+/* runway - signature element */
+.runway{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:22px;}
+.runway-head{display:flex;justify-content:space-between;margin-bottom:14px;}
+.runway-head h3{font-size:15px;}
+.runway-head .sub{color:var(--ink-faint);font-size:12px;}
+.runway-track{position:relative;height:64px;border-bottom:1px solid var(--line);}
+.runway-day-labels{display:flex;justify-content:space-between;color:var(--ink-faint);font-size:11px;margin-top:6px;font-family:'JetBrains Mono',monospace;}
+.runway-marker{position:absolute;bottom:0;width:9px;height:9px;border-radius:50%;transform:translateX(-50%);cursor:default;}
+.runway-marker.urgent{background:var(--red);}
+.runway-marker.soon{background:var(--amber);}
+.runway-marker.ok{background:var(--teal);}
+.runway-marker .tip{visibility:hidden;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:6px 9px;border-radius:6px;font-size:11px;white-space:nowrap;z-index:5;}
+.runway-marker:hover .tip{visibility:visible;}
+.runway-empty{color:var(--ink-faint);font-size:12.5px;padding:20px 0;text-align:center;}
+
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-faint);padding:8px 10px;border-bottom:1px solid var(--line);}
+td{padding:11px 10px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle;}
+tr:hover td{background:#FAFBFA;}
+.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:600;}
+.tag.teal{background:var(--teal-soft);color:var(--teal);}
+.tag.amber{background:var(--amber-soft);color:var(--amber);}
+.tag.red{background:var(--red-soft);color:var(--red);}
+.tag.grey{background:#EEF0EF;color:var(--ink-soft);}
+.link{color:var(--teal);cursor:pointer;font-weight:600;}
+.link:hover{text-decoration:underline;}
+.toolbar{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
+input,select,textarea{font-family:'Inter',sans-serif;border:1px solid var(--line);border-radius:7px;padding:9px 11px;font-size:13.5px;background:#fff;color:var(--ink);width:100%;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;}
+.search{max-width:280px;}
+.empty{text-align:center;padding:50px 20px;color:var(--ink-faint);}
+.empty h3{color:var(--ink-soft);margin-bottom:6px;}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(27,42,60,.45);display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;z-index:50;}
+.overlay.show{display:flex;}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:640px;padding:28px 30px;margin-bottom:40px;}
+.modal h2{font-size:19px;margin-bottom:4px;}
+.modal .sub{color:var(--ink-soft);font-size:12.5px;margin-bottom:18px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-grid .full{grid-column:1/-1;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;}
+.section-title{font-size:12px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 8px;grid-column:1/-1;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;}
+
+.detail-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;}
+.detail-header h2{font-size:22px;}
+.detail-header .meta{color:var(--ink-soft);font-size:13px;margin-top:3px;}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;}
+.tab{padding:9px 14px;font-size:13px;font-weight:600;color:var(--ink-faint);cursor:pointer;border-bottom:2px solid transparent;}
+.tab.active{color:var(--ink);border-color:var(--teal);}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-bottom:6px;}
+.kv .item{padding:10px 0;border-bottom:1px solid var(--line);}
+.kv .item label{display:block;font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.03em;}
+.kv .item .val{font-size:13.5px;margin-top:2px;}
+.opp-card{border:1px solid var(--line);border-radius:9px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.opp-card .prod{font-weight:600;}
+.timeline-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);}
+.timeline-item .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);margin-top:6px;flex-shrink:0;}
+.timeline-item .body{flex:1;}
+.timeline-item .type{font-weight:600;font-size:13px;}
+.timeline-item .date{color:var(--ink-faint);font-size:11.5px;}
+.timeline-item .desc{color:var(--ink-soft);font-size:13px;margin-top:3px;}
+::placeholder{color:#B7C0C6;}
+.status-pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:5px 11px;border-radius:20px;}
+.status-pill.on{background:var(--teal-soft);color:var(--teal);}
+.status-pill.off{background:#EEF0EF;color:var(--ink-faint);}
+.dot-status{width:7px;height:7px;border-radius:50%;background:currentColor;}
+.notice{background:var(--amber-soft);border:1px solid var(--amber);color:#8A6222;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.6;margin-bottom:16px;}
+.file-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+.file-row .name{display:flex;align-items:center;gap:8px;}
+.step{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-soft);}
+.step b{color:var(--ink);}
+code{background:#F0F2F1;padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">Base<span>&middot;</span>Cliente</div>
+    <div class="nav-item active" data-view="dashboard">📊 Painel</div>
+    <div class="nav-item" data-view="clientes">👤 Clientes <span class="nav-count" id="count-clientes">0</span></div>
+    <div class="nav-item" data-view="apolices">📄 Apólices <span class="nav-count" id="count-apolices">0</span></div>
+    <div class="nav-item" data-view="interacoes">🕓 Interações <span class="nav-count" id="count-interacoes">0</span></div>
+    <div class="nav-item" data-view="oportunidades">💡 Oportunidades</div>
+    <div class="nav-item" data-view="config">⚙️ Configurações</div>
+  </div>
+  <main id="main"></main>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal-content"></div></div>
+
+<script>
+const PRODUCT_TYPES=['Auto','Vida','Consórcio','Empresarial','Residencial'];
+const INTERACTION_TYPES=['Visita','Apresentação de proposta','Levantamento de documentação','Contato de renovação','Ligação','Outro'];
+
+let state={clients:[],policies:[],interactions:[],view:'dashboard',currentClientId:null,clientTab:'dados',
+  driveConfig:{clientId:'',rootFolderId:''}, driveAccessToken:null, driveStatusMsg:'', driveBusy:false};
+
+// ---------- storage (works inside Claude.ai, falls back to localStorage when run standalone) ----------
+const HAS_CLAUDE_STORAGE = (typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get==='function');
+async function loadAll(){
+  state.clients = await getJSON('clients', []);
+  state.policies = await getJSON('policies', []);
+  state.interactions = await getJSON('interactions', []);
+  state.driveConfig = await getJSON('driveConfig', {clientId:'',rootFolderId:''});
+}
+async function getJSON(key, fallback){
+  try{
+    if(HAS_CLAUDE_STORAGE){
+      const r = await window.storage.get(key,false);
+      return r ? JSON.parse(r.value) : fallback;
+    } else {
+      const v = localStorage.getItem('crm:'+key);
+      return v ? JSON.parse(v) : fallback;
+    }
+  }catch(e){ return fallback; }
+}
+async function setJSON(key, value){
+  try{
+    if(HAS_CLAUDE_STORAGE){ await window.storage.set(key, JSON.stringify(value), false); }
+    else { localStorage.setItem('crm:'+key, JSON.stringify(value)); }
+  }catch(e){ console.error('storage error', e); }
+}
+async function saveClients(){ await setJSON('clients', state.clients); }
+async function savePolicies(){ await setJSON('policies', state.policies); }
+async function saveInteractions(){ await setJSON('interactions', state.interactions); }
+async function saveDriveConfig(){ await setJSON('driveConfig', state.driveConfig); }
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d+'T00:00:00'); if(isNaN(dt)) return d; return dt.toLocaleDateString('pt-BR'); }
+function daysUntil(d){ if(!d) return null; const today=new Date(); today.setHours(0,0,0,0); const dt=new Date(d+'T00:00:00'); return Math.round((dt-today)/86400000); }
+function clientName(id){ const c=state.clients.find(c=>c.id===id); return c?c.nome:'—'; }
+
+// ---------- render root ----------
+function render(){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===state.view));
+  document.getElementById('count-clientes').textContent=state.clients.length;
+  document.getElementById('count-apolices').textContent=state.policies.length;
+  document.getElementById('count-interacoes').textContent=state.interactions.length;
+  const main=document.getElementById('main');
+  if(state.view==='dashboard') main.innerHTML=viewDashboard();
+  else if(state.view==='clientes') main.innerHTML=viewClientes();
+  else if(state.view==='apolices') main.innerHTML=viewApolices();
+  else if(state.view==='interacoes') main.innerHTML=viewInteracoes();
+  else if(state.view==='oportunidades') main.innerHTML=viewOportunidades();
+  else if(state.view==='config') main.innerHTML=viewConfig();
+  else if(state.view==='clientDetail') main.innerHTML=viewClientDetail();
+  attachHandlers();
+}
+
+// ---------- dashboard ----------
+function viewDashboard(){
+  const upcoming = state.policies
+    .filter(p=>p.vigenciaFim)
+    .map(p=>({...p, dias:daysUntil(p.vigenciaFim)}))
+    .filter(p=>p.dias!==null && p.dias<=90)
+    .sort((a,b)=>a.dias-b.dias);
+  const urgent = upcoming.filter(p=>p.dias<30 && p.dias>=0).length;
+  const expired = upcoming.filter(p=>p.dias<0).length;
+  const soon = upcoming.filter(p=>p.dias>=30 && p.dias<=90).length;
+  const pendingInteractions = state.interactions.filter(i=>i.status==='Pendente').length;
+
+  let markers='';
+  if(upcoming.length===0){
+    markers='<div class="runway-empty">Nenhuma apólice vencendo nos próximos 90 dias.</div>';
+  } else {
+    const span=100;
+    markers='<div class="runway-track">'+upcoming.map(p=>{
+      const pos = Math.max(0,Math.min(100,((p.dias+10)/(90+10))*100));
+      const cls = p.dias<0 ? 'urgent' : p.dias<30 ? 'urgent' : p.dias<=90 ? 'soon':'ok';
+      return `<div class="runway-marker ${cls}" style="left:${pos}%"><div class="tip">${clientName(p.clientId)} · ${p.tipo} · ${fmtDate(p.vigenciaFim)}</div></div>`;
+    }).join('')+'</div><div class="runway-day-labels"><span>vencidas</span><span>hoje</span><span>30d</span><span>60d</span><span>90d</span></div>';
+  }
+
+  return `
+  <div class="topbar"><div><h1>Painel</h1><div class="sub">Visão geral da carteira</div></div></div>
+  <div class="grid-cards">
+    <div class="card stat teal"><div class="num">${state.clients.length}</div><div class="label">Clientes na base</div></div>
+    <div class="card stat red"><div class="num">${expired}</div><div class="label">Apólices vencidas</div></div>
+    <div class="card stat amber"><div class="num">${urgent+soon}</div><div class="label">Renovações em 90 dias</div></div>
+    <div class="card stat"><div class="num">${pendingInteractions}</div><div class="label">Interações pendentes</div></div>
+  </div>
+  <div class="runway">
+    <div class="runway-head"><h3>Linha de renovações</h3><div class="sub">próximos 90 dias · passe o mouse para detalhes</div></div>
+    ${markers}
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:12px;">Interações pendentes</h3>
+    ${renderInteractionTable(state.interactions.filter(i=>i.status==='Pendente').slice(0,8))}
+  </div>`;
+}
+
+// ---------- clientes ----------
+function viewClientes(){
+  const rows = state.clients.map(c=>{
+    const pol = state.policies.filter(p=>p.clientId===c.id);
+    const nextRenewal = pol.filter(p=>p.vigenciaFim).map(p=>daysUntil(p.vigenciaFim)).filter(d=>d!==null).sort((a,b)=>a-b)[0];
+    let renewalTag='<span class="tag grey">sem apólice</span>';
+    if(nextRenewal!==undefined){
+      if(nextRenewal<0) renewalTag='<span class="tag red">vencida</span>';
+      else if(nextRenewal<=30) renewalTag='<span class="tag red">'+nextRenewal+'d</span>';
+      else if(nextRenewal<=90) renewalTag='<span class="tag amber">'+nextRenewal+'d</span>';
+      else renewalTag='<span class="tag teal">ok</span>';
+    }
+    return `<tr>
+      <td><span class="link" data-open-client="${c.id}">${c.nome||'(sem nome)'}</span></td>
+      <td>${c.cpf||'—'}</td>
+      <td>${c.fone||'—'}</td>
+      <td>${(c.produtos||[]).join(', ')||'—'}</td>
+      <td>${pol.length}</td>
+      <td>${renewalTag}</td>
+    </tr>`;
+  }).join('');
+  return `
+  <div class="topbar">
+    <div><h1>Clientes</h1><div class="sub">${state.clients.length} cadastrados</div></div>
+    <button class="btn-primary" id="btn-new-client">+ Novo cliente</button>
+  </div>
+  <div class="card">
+    ${state.clients.length===0? emptyState('Nenhum cliente cadastrado','Cadastre seu primeiro cliente para começar a controlar a base.') : `
+    <table><thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Produtos</th><th>Apólices</th><th>Renovação</th></tr></thead>
+    <tbody>${rows}</tbody></table>`}
+  </div>`;
+}
+
+function emptyState(title,sub){
+  return `<div class="empty"><h3>${title}</h3><div>${sub}</div></div>`;
+}
+
+function clientFormFields(c={}){
+  c=c||{};
+  const v=c.veiculo||{}; const e=c.esposa||{};
+  const fieldsProdutos = PRODUCT_TYPES.map(p=>`<label style="display:inline-flex;align-items:center;gap:5px;font-weight:400;font-size:12.5px;margin-right:12px;">
+    <input type="checkbox" style="width:auto;" value="${p}" ${((c.produtos||[]).includes(p))?'checked':''} class="chk-produto">${p}</label>`).join('');
+  return `
+  <div class="form-grid">
+    <div class="section-title">Dados pessoais</div>
+    <div class="field"><label>Nome completo</label><input id="f-nome" value="${c.nome||''}"></div>
+    <div class="field"><label>CPF</label><input id="f-cpf" value="${c.cpf||''}"></div>
+    <div class="field"><label>RG</label><input id="f-rg" value="${c.rg||''}"></div>
+    <div class="field"><label>Data de emissão RG</label><input type="date" id="f-rgData" value="${c.rgData||''}"></div>
+    <div class="field"><label>Telefone</label><input id="f-fone" value="${c.fone||''}"></div>
+    <div class="field"><label>Email</label><input id="f-email" value="${c.email||''}"></div>
+    <div class="field full"><label>Endereço completo com CEP</label><input id="f-endereco" value="${c.endereco||''}"></div>
+    <div class="field"><label>Data de nascimento</label><input type="date" id="f-nascimento" value="${c.nascimento||''}"></div>
+    <div class="field"><label>Nome da mãe</label><input id="f-mae" value="${c.mae||''}"></div>
+
+    <div class="section-title">Dados financeiros</div>
+    <div class="field full"><label>Conta corrente (banco / agência / conta)</label><input id="f-conta" value="${c.conta||''}"></div>
+    <div class="field full"><label>Cartão de crédito (bandeira / número / validade / nome impresso)</label><input id="f-cartao" value="${c.cartao||''}"></div>
+
+    <div class="section-title">CNH</div>
+    <div class="field"><label>Validade da CNH</label><input type="date" id="f-cnh" value="${c.cnh||''}"></div>
+
+    <div class="section-title">Veículo</div>
+    <div class="field"><label>Placa</label><input id="f-placa" value="${v.placa||''}"></div>
+    <div class="field"><label>Renavam</label><input id="f-renavam" value="${v.renavam||''}"></div>
+    <div class="field"><label>Cor</label><input id="f-cor" value="${v.cor||''}"></div>
+    <div class="field"><label>Tipo de veículo</label><input id="f-tipoveiculo" value="${v.tipo||''}"></div>
+    <div class="field"><label>Ano/modelo</label><input id="f-anomodelo" value="${v.anoModelo||''}"></div>
+    <div class="field"><label>Data de licenciamento</label><input type="date" id="f-licenciamento" value="${v.licenciamento||''}"></div>
+
+    <div class="section-title">Cônjuge</div>
+    <div class="field"><label>Nome</label><input id="f-esposaNome" value="${e.nome||''}"></div>
+    <div class="field"><label>CPF</label><input id="f-esposaCpf" value="${e.cpf||''}"></div>
+    <div class="field"><label>Data de nascimento</label><input type="date" id="f-esposaNascimento" value="${e.nascimento||''}"></div>
+
+    <div class="section-title">Produtos contratados</div>
+    <div class="field full">${fieldsProdutos}</div>
+
+    <div class="section-title">Observações / sugestões</div>
+    <div class="field full"><label>Notas gerais e sugestões de produtos (investimento, consórcio data certa, financiamento...)</label><textarea id="f-notas" rows="3">${c.notas||''}</textarea></div>
+  </div>`;
+}
+
+function openClientModal(id){
+  const c = id ? state.clients.find(x=>x.id===id) : {};
+  document.getElementById('modal-content').innerHTML=`
+    <h2>${id?'Editar cliente':'Novo cliente'}</h2>
+    <div class="sub">Campos de identificação, financeiros e de patrimônio do cliente.</div>
+    ${clientFormFields(c)}
+    <div class="modal-actions">
+      <button class="btn-ghost" id="btn-cancel">Cancelar</button>
+      <button class="btn-primary" id="btn-save-client" data-id="${id||''}">Salvar cliente</button>
+    </div>`;
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('btn-cancel').onclick=closeModal;
+  document.getElementById('btn-save-client').onclick=()=>saveClientFromForm(id||null);
+}
+
+async function saveClientFromForm(id){
+  const g=k=>document.getElementById(k).value;
+  const produtos=[...document.querySelectorAll('.chk-produto:checked')].map(x=>x.value);
+  const data={
+    id: id||uid(),
+    nome:g('f-nome'), cpf:g('f-cpf'), rg:g('f-rg'), rgData:g('f-rgData'),
+    fone:g('f-fone'), email:g('f-email'), endereco:g('f-endereco'), nascimento:g('f-nascimento'),
+    mae:g('f-mae'), conta:g('f-conta'), cartao:g('f-cartao'), cnh:g('f-cnh'),
+    veiculo:{placa:g('f-placa'),renavam:g('f-renavam'),cor:g('f-cor'),tipo:g('f-tipoveiculo'),anoModelo:g('f-anomodelo'),licenciamento:g('f-licenciamento')},
+    esposa:{nome:g('f-esposaNome'),cpf:g('f-esposaCpf'),nascimento:g('f-esposaNascimento')},
+    produtos, notas:g('f-notas')
+  };
+  if(!data.nome){ alert('Informe o nome do cliente.'); return; }
+  const idx=state.clients.findIndex(x=>x.id===data.id);
+  if(idx>=0) state.clients[idx]=data; else state.clients.push(data);
+  await saveClients();
+  closeModal();
+  render();
+}
+
+// ---------- client detail ----------
+function viewClientDetail(){
+  const c=state.clients.find(x=>x.id===state.currentClientId);
+  if(!c){ state.view='clientes'; return viewClientes(); }
+  const pol=state.policies.filter(p=>p.clientId===c.id);
+  const inter=state.interactions.filter(i=>i.clientId===c.id).sort((a,b)=>new Date(b.data)-new Date(a.data));
+  const v=c.veiculo||{}, e=c.esposa||{};
+
+  let tabContent='';
+  if(state.clientTab==='dados'){
+    tabContent=`<div class="kv">
+      ${kvItem('CPF',c.cpf)}${kvItem('RG',c.rg+(c.rgData?(' · emissão '+fmtDate(c.rgData)):''))}
+      ${kvItem('Telefone',c.fone)}${kvItem('Email',c.email)}
+      ${kvItem('Endereço',c.endereco)}${kvItem('Nascimento',fmtDate(c.nascimento))}
+      ${kvItem('Nome da mãe',c.mae)}${kvItem('CNH válida até',fmtDate(c.cnh))}
+      ${kvItem('Conta corrente',c.conta)}${kvItem('Cartão de crédito',c.cartao)}
+    </div>
+    <h3 style="font-size:14px;margin:18px 0 8px;">Veículo</h3>
+    <div class="kv">
+      ${kvItem('Placa',v.placa)}${kvItem('Renavam',v.renavam)}
+      ${kvItem('Cor',v.cor)}${kvItem('Tipo',v.tipo)}
+      ${kvItem('Ano/modelo',v.anoModelo)}${kvItem('Licenciamento',fmtDate(v.licenciamento))}
+    </div>
+    <h3 style="font-size:14px;margin:18px 0 8px;">Cônjuge</h3>
+    <div class="kv">${kvItem('Nome',e.nome)}${kvItem('CPF',e.cpf)}${kvItem('Nascimento',fmtDate(e.nascimento))}</div>
+    ${c.notas?`<h3 style="font-size:14px;margin:18px 0 8px;">Notas</h3><div style="white-space:pre-wrap;color:var(--ink-soft);">${c.notas}</div>`:''}`;
+  } else if(state.clientTab==='apolices'){
+    tabContent=`<div class="toolbar" style="justify-content:flex-end;"><button class="btn-primary" id="btn-new-policy">+ Nova apólice</button></div>
+    ${pol.length===0?emptyState('Nenhuma apólice','Cadastre a primeira apólice deste cliente.'):renderPolicyTable(pol,false)}`;
+  } else if(state.clientTab==='drive'){
+    const files = c.driveFiles||[];
+    tabContent=`<div class="toolbar" style="justify-content:space-between;">
+      <div style="color:var(--ink-soft);font-size:12.5px;">${files.length} arquivo(s) encontrado(s) na pasta do Drive deste cliente.</div>
+      <button class="btn-primary" id="btn-extract-client" data-id="${c.id}" ${state.driveAccessToken?'':'disabled'}>${state.driveBusy?'Lendo...':'Extrair dados com IA'}</button>
+    </div>
+    ${!state.driveAccessToken?'<div class="notice">Conecte-se ao Google Drive em Configurações para extrair dados destes arquivos.</div>':''}
+    ${state.driveStatusMsg?`<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">${state.driveStatusMsg}</div>`:''}
+    ${files.length===0?emptyState('Nenhum arquivo vinculado','Rode "Atualizar do Drive agora" em Configurações para vincular arquivos.'):
+      files.map(f=>`<div class="file-row"><div class="name">📄 ${f.name}</div></div>`).join('')}`;
+  } else if(state.clientTab==='interacoes'){
+    tabContent=`<div class="toolbar" style="justify-content:flex-end;"><button class="btn-primary" id="btn-new-interaction">+ Nova interação</button></div>
+    ${inter.length===0?emptyState('Nenhuma interação registrada','Registre visitas, propostas e coleta de documentos.'):
+      inter.map(i=>`<div class="timeline-item"><div class="dot"></div><div class="body">
+        <div class="type">${i.tipo} ${i.status==='Pendente'?'<span class="tag amber">pendente</span>':'<span class="tag teal">concluído</span>'}</div>
+        <div class="date">${fmtDate(i.data)}${i.proximaData?(' · próximo contato '+fmtDate(i.proximaData)):''}</div>
+        <div class="desc">${i.descricao||''}</div>
+      </div></div>`).join('')}`;
+  }
+
+  const missing = PRODUCT_TYPES.filter(p=>!(c.produtos||[]).includes(p));
+
+  return `
+  <div class="detail-header">
+    <div><button class="btn-ghost" id="btn-back-clients" style="margin-bottom:10px;">← Voltar</button>
+      <h2>${c.nome}</h2><div class="meta">${c.cpf||'sem CPF'} · ${c.fone||'sem telefone'}</div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-ghost" id="btn-edit-client" data-id="${c.id}">Editar</button>
+      <button class="btn-danger" id="btn-del-client" data-id="${c.id}">Excluir</button>
+    </div>
+  </div>
+  ${missing.length>0 && missing.length<PRODUCT_TYPES.length ? `<div class="card" style="margin-bottom:16px;background:var(--teal-soft);border-color:var(--teal);"><b>Oportunidade:</b> cliente ainda não tem ${missing.join(', ')}.</div>`:''}
+  <div class="tabs">
+    <div class="tab ${state.clientTab==='dados'?'active':''}" data-tab="dados">Dados</div>
+    <div class="tab ${state.clientTab==='apolices'?'active':''}" data-tab="apolices">Apólices (${pol.length})</div>
+    <div class="tab ${state.clientTab==='interacoes'?'active':''}" data-tab="interacoes">Interações (${inter.length})</div>
+    <div class="tab ${state.clientTab==='drive'?'active':''}" data-tab="drive">Arquivos do Drive (${(c.driveFiles||[]).length})</div>
+  </div>
+  <div class="card">${tabContent}</div>`;
+}
+function kvItem(label,val){ return `<div class="item"><label>${label}</label><div class="val">${val||'—'}</div></div>`; }
+
+// ---------- apolices (global view) ----------
+function viewApolices(){
+  return `
+  <div class="topbar">
+    <div><h1>Apólices</h1><div class="sub">${state.policies.length} cadastradas</div></div>
+    <button class="btn-primary" id="btn-new-policy-global">+ Nova apólice</button>
+  </div>
+  <div class="card">
+    ${state.policies.length===0?emptyState('Nenhuma apólice','Cadastre apólices a partir da ficha do cliente ou aqui.'):renderPolicyTable(state.policies,true)}
+  </div>`;
+}
+function renderPolicyTable(list,showClient){
+  const sorted=[...list].sort((a,b)=> (daysUntil(a.vigenciaFim)??9999) - (daysUntil(b.vigenciaFim)??9999));
+  return `<table><thead><tr>${showClient?'<th>Cliente</th>':''}<th>Tipo</th><th>Nº apólice</th><th>Grupo</th><th>Vigência</th><th>Status</th><th></th></tr></thead>
+  <tbody>${sorted.map(p=>{
+    const d=daysUntil(p.vigenciaFim);
+    let tag='<span class="tag grey">—</span>';
+    if(d!==null){
+      if(d<0) tag='<span class="tag red">vencida</span>';
+      else if(d<=30) tag='<span class="tag red">'+d+'d</span>';
+      else if(d<=90) tag='<span class="tag amber">'+d+'d</span>';
+      else tag='<span class="tag teal">vigente</span>';
+    }
+    return `<tr>${showClient?`<td><span class="link" data-open-client="${p.clientId}">${clientName(p.clientId)}</span></td>`:''}
+      <td>${p.tipo}</td><td>${p.numero||'—'}</td><td>${p.grupo||'—'}</td>
+      <td>${fmtDate(p.vigenciaInicio)} — ${fmtDate(p.vigenciaFim)}</td><td>${tag}</td>
+      <td><span class="link" data-edit-policy="${p.id}">editar</span> · <span class="link" data-del-policy="${p.id}" style="color:var(--red);">excluir</span></td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function openPolicyModal(clientId,policyId){
+  const p = policyId ? state.policies.find(x=>x.id===policyId) : {clientId};
+  const clientOptions = state.clients.map(c=>`<option value="${c.id}" ${c.id===p.clientId?'selected':''}>${c.nome}</option>`).join('');
+  document.getElementById('modal-content').innerHTML=`
+    <h2>${policyId?'Editar apólice':'Nova apólice'}</h2>
+    <div class="form-grid">
+      <div class="field full"><label>Cliente</label><select id="p-cliente">${clientOptions}</select></div>
+      <div class="field"><label>Tipo de produto</label><select id="p-tipo">${PRODUCT_TYPES.map(t=>`<option ${p.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="field"><label>Nº da apólice</label><input id="p-numero" value="${p.numero||''}"></div>
+      <div class="field"><label>Seguradora</label><input id="p-seguradora" value="${p.seguradora||''}"></div>
+      <div class="field"><label>Grupo</label><input id="p-grupo" value="${p.grupo||''}"></div>
+      <div class="field"><label>Início da vigência</label><input type="date" id="p-inicio" value="${p.vigenciaInicio||''}"></div>
+      <div class="field"><label>Fim da vigência</label><input type="date" id="p-fim" value="${p.vigenciaFim||''}"></div>
+      <div class="field"><label>Prêmio (R$)</label><input id="p-premio" value="${p.premio||''}"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="btn-cancel">Cancelar</button>
+      <button class="btn-primary" id="btn-save-policy" data-id="${policyId||''}">Salvar apólice</button>
+    </div>`;
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('btn-cancel').onclick=closeModal;
+  document.getElementById('btn-save-policy').onclick=()=>savePolicyFromForm(policyId||null);
+}
+async function savePolicyFromForm(id){
+  const g=k=>document.getElementById(k).value;
+  const data={id:id||uid(),clientId:g('p-cliente'),tipo:g('p-tipo'),numero:g('p-numero'),seguradora:g('p-seguradora'),
+    grupo:g('p-grupo'),vigenciaInicio:g('p-inicio'),vigenciaFim:g('p-fim'),premio:g('p-premio')};
+  if(!data.clientId){ alert('Selecione o cliente.'); return; }
+  const idx=state.policies.findIndex(x=>x.id===data.id);
+  if(idx>=0) state.policies[idx]=data; else state.policies.push(data);
+  await savePolicies();
+  closeModal(); render();
+}
+
+// ---------- interacoes ----------
+function viewInteracoes(){
+  const sorted=[...state.interactions].sort((a,b)=>new Date(b.data)-new Date(a.data));
+  return `
+  <div class="topbar">
+    <div><h1>Interações</h1><div class="sub">Visitas, propostas e documentação</div></div>
+    <button class="btn-primary" id="btn-new-interaction-global">+ Nova interação</button>
+  </div>
+  <div class="card">${sorted.length===0?emptyState('Nenhuma interação','Registre o andamento do relacionamento com seus clientes.'):renderInteractionTable(sorted)}</div>`;
+}
+function renderInteractionTable(list){
+  return `<table><thead><tr><th>Cliente</th><th>Tipo</th><th>Data</th><th>Descrição</th><th>Status</th><th></th></tr></thead>
+  <tbody>${list.map(i=>`<tr>
+    <td><span class="link" data-open-client="${i.clientId}">${clientName(i.clientId)}</span></td>
+    <td>${i.tipo}</td><td>${fmtDate(i.data)}</td><td>${i.descricao||''}</td>
+    <td>${i.status==='Pendente'?'<span class="tag amber">pendente</span>':'<span class="tag teal">concluído</span>'}</td>
+    <td><span class="link" data-edit-interaction="${i.id}">editar</span> · <span class="link" data-del-interaction="${i.id}" style="color:var(--red);">excluir</span></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+function openInteractionModal(clientId,interId){
+  const i = interId ? state.interactions.find(x=>x.id===interId) : {clientId,status:'Pendente'};
+  const clientOptions = state.clients.map(c=>`<option value="${c.id}" ${c.id===i.clientId?'selected':''}>${c.nome}</option>`).join('');
+  document.getElementById('modal-content').innerHTML=`
+    <h2>${interId?'Editar interação':'Nova interação'}</h2>
+    <div class="form-grid">
+      <div class="field full"><label>Cliente</label><select id="i-cliente">${clientOptions}</select></div>
+      <div class="field"><label>Tipo</label><select id="i-tipo">${INTERACTION_TYPES.map(t=>`<option ${i.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="field"><label>Data</label><input type="date" id="i-data" value="${i.data||''}"></div>
+      <div class="field full"><label>Descrição</label><textarea id="i-desc" rows="3">${i.descricao||''}</textarea></div>
+      <div class="field"><label>Status</label><select id="i-status"><option ${i.status==='Pendente'?'selected':''}>Pendente</option><option ${i.status==='Concluído'?'selected':''}>Concluído</option></select></div>
+      <div class="field"><label>Próximo contato</label><input type="date" id="i-proxima" value="${i.proximaData||''}"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="btn-cancel">Cancelar</button>
+      <button class="btn-primary" id="btn-save-interaction" data-id="${interId||''}">Salvar interação</button>
+    </div>`;
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('btn-cancel').onclick=closeModal;
+  document.getElementById('btn-save-interaction').onclick=()=>saveInteractionFromForm(interId||null);
+}
+async function saveInteractionFromForm(id){
+  const g=k=>document.getElementById(k).value;
+  const data={id:id||uid(),clientId:g('i-cliente'),tipo:g('i-tipo'),data:g('i-data'),descricao:g('i-desc'),status:g('i-status'),proximaData:g('i-proxima')};
+  if(!data.clientId){ alert('Selecione o cliente.'); return; }
+  const idx=state.interactions.findIndex(x=>x.id===data.id);
+  if(idx>=0) state.interactions[idx]=data; else state.interactions.push(data);
+  await saveInteractions();
+  closeModal(); render();
+}
+
+// ---------- integração google drive ----------
+let gisTokenClient=null;
+function extractFolderId(input){
+  if(!input) return '';
+  const m = input.match(/folders\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : input.trim();
+}
+function initGis(){
+  if(!window.google || !window.google.accounts || !state.driveConfig.clientId) return false;
+  gisTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: state.driveConfig.clientId,
+    scope: 'https://www.googleapis.com/auth/drive.readonly',
+    callback: (resp)=>{
+      if(resp && resp.access_token){
+        state.driveAccessToken = resp.access_token;
+        state.driveStatusMsg = 'Conectado ao Google Drive.';
+      } else {
+        state.driveStatusMsg = 'Não foi possível conectar. Tente novamente.';
+      }
+      render();
+    }
+  });
+  return true;
+}
+function connectDrive(){
+  if(!state.driveConfig.clientId){ alert('Informe o Client ID do Google antes de conectar.'); return; }
+  if(!gisTokenClient){ const ok=initGis(); if(!ok){ alert('A biblioteca do Google ainda não carregou, ou o Client ID é inválido. Verifique se este arquivo está sendo aberto via http(s), não em file://.'); return; } }
+  gisTokenClient.requestAccessToken();
+}
+async function driveFetch(url){
+  const res = await fetch(url,{headers:{Authorization:`Bearer ${state.driveAccessToken}`}});
+  if(!res.ok) throw new Error('Falha na chamada ao Drive: '+res.status);
+  return res.json();
+}
+async function listSubfolders(folderId){
+  const q=encodeURIComponent(`'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const data = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&pageSize=200`);
+  return data.files||[];
+}
+async function listFilesInFolder(folderId){
+  const q=encodeURIComponent(`'${folderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`);
+  const data = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType)&pageSize=200`);
+  return data.files||[];
+}
+async function scanDriveForClients(){
+  if(!state.driveAccessToken){ alert('Conecte-se ao Google Drive primeiro.'); return; }
+  const rootId = extractFolderId(state.driveConfig.rootFolderId);
+  if(!rootId){ alert('Informe a pasta raiz de clientes.'); return; }
+  state.driveBusy=true; state.driveStatusMsg='Buscando pastas de clientes...'; render();
+  try{
+    const folders = await listSubfolders(rootId);
+    let novos=0, atualizados=0;
+    for(const f of folders){
+      const files = await listFilesInFolder(f.id);
+      let c = state.clients.find(cl=>cl.nome && cl.nome.trim().toLowerCase()===f.name.trim().toLowerCase());
+      if(!c){
+        c = {id:uid(), nome:f.name, produtos:[], driveFolderId:f.id, driveFiles:files, origemDrive:true};
+        state.clients.push(c);
+        novos++;
+      } else {
+        c.driveFolderId=f.id; c.driveFiles=files; atualizados++;
+      }
+    }
+    await saveClients();
+    state.driveStatusMsg = `Varredura concluída: ${folders.length} pasta(s) encontrada(s) · ${novos} cliente(s) novo(s) · ${atualizados} atualizado(s).`;
+  }catch(e){
+    state.driveStatusMsg = 'Erro ao buscar no Drive: '+e.message;
+  }
+  state.driveBusy=false; render();
+}
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result.split(',')[1]);
+    r.onerror=reject;
+    r.readAsDataURL(blob);
+  });
+}
+async function downloadDriveFile(file){
+  let url, isGoogleNative = file.mimeType.startsWith('application/vnd.google-apps');
+  if(isGoogleNative){
+    const exportType = file.mimeType.includes('spreadsheet') ? 'text/csv' : 'application/pdf';
+    url=`https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=${encodeURIComponent(exportType)}`;
+  } else {
+    url=`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`;
+  }
+  const res = await fetch(url,{headers:{Authorization:`Bearer ${state.driveAccessToken}`}});
+  if(!res.ok) throw new Error('Falha ao baixar arquivo: '+file.name);
+  const blob = await res.blob();
+  const base64 = await blobToBase64(blob);
+  return {base64, mimeType: blob.type || file.mimeType};
+}
+const CLIENT_FIELD_KEYS = ['nome','cpf','rg','rgData','fone','email','endereco','nascimento','mae','conta','cartao','cnh',
+  'placa','renavam','cor','tipoVeiculo','anoModelo','licenciamento','esposaNome','esposaCpf','esposaNascimento',
+  'apoliceNumero','apoliceTipo','apoliceSeguradora','apoliceGrupo','apoliceVigenciaInicio','apoliceVigenciaFim'];
+async function extractFieldsFromFile(file){
+  const {base64, mimeType} = await downloadDriveFile(file);
+  const isPdf = mimeType.includes('pdf');
+  const isImage = mimeType.startsWith('image/');
+  let contentBlock;
+  if(isPdf) contentBlock = {type:'document', source:{type:'base64', media_type:'application/pdf', data:base64}};
+  else if(isImage) contentBlock = {type:'image', source:{type:'base64', media_type:mimeType, data:base64}};
+  else contentBlock = {type:'text', text: atob(base64)};
+  const prompt = `Extraia deste documento os dados de um cliente de corretora de seguros, se existirem. Responda SOMENTE com um JSON válido, sem markdown e sem texto fora do JSON, com exatamente estas chaves (use "" quando não encontrar): ${CLIENT_FIELD_KEYS.join(', ')}. Datas no formato AAAA-MM-DD.`;
+  const resp = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({model:'claude-sonnet-4-6', max_tokens:1000,
+      messages:[{role:'user', content: contentBlock.type==='text' ? (contentBlock.text+'\n\n'+prompt) : [contentBlock,{type:'text',text:prompt}]}]})
+  });
+  const data = await resp.json();
+  const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+  const clean = text.replace(/```json|```/g,'').trim();
+  try{ return JSON.parse(clean); }catch(e){ return null; }
+}
+async function extractClientFromDrive(clientId){
+  const c = state.clients.find(x=>x.id===clientId);
+  if(!c || !c.driveFiles || c.driveFiles.length===0){ alert('Este cliente não tem arquivos do Drive vinculados.'); return; }
+  state.driveBusy=true; state.driveStatusMsg='Lendo documentos com IA...'; render();
+  let filledCount=0, foundPolicy=null;
+  try{
+    for(const f of c.driveFiles){
+      const extracted = await extractFieldsFromFile(f);
+      if(!extracted) continue;
+      const setIfEmpty=(k,v)=>{ if(v && !c[k]){ c[k]=v; filledCount++; } };
+      setIfEmpty('nome',extracted.nome); setIfEmpty('cpf',extracted.cpf); setIfEmpty('rg',extracted.rg);
+      setIfEmpty('rgData',extracted.rgData); setIfEmpty('fone',extracted.fone); setIfEmpty('email',extracted.email);
+      setIfEmpty('endereco',extracted.endereco); setIfEmpty('nascimento',extracted.nascimento); setIfEmpty('mae',extracted.mae);
+      setIfEmpty('conta',extracted.conta); setIfEmpty('cartao',extracted.cartao); setIfEmpty('cnh',extracted.cnh);
+      c.veiculo = c.veiculo||{};
+      const setVeiculoIfEmpty=(k,v)=>{ if(v && !c.veiculo[k]){ c.veiculo[k]=v; filledCount++; } };
+      setVeiculoIfEmpty('placa',extracted.placa); setVeiculoIfEmpty('renavam',extracted.renavam); setVeiculoIfEmpty('cor',extracted.cor);
+      setVeiculoIfEmpty('tipo',extracted.tipoVeiculo); setVeiculoIfEmpty('anoModelo',extracted.anoModelo); setVeiculoIfEmpty('licenciamento',extracted.licenciamento);
+      c.esposa = c.esposa||{};
+      const setEsposaIfEmpty=(k,v)=>{ if(v && !c.esposa[k]){ c.esposa[k]=v; filledCount++; } };
+      setEsposaIfEmpty('nome',extracted.esposaNome); setEsposaIfEmpty('cpf',extracted.esposaCpf); setEsposaIfEmpty('nascimento',extracted.esposaNascimento);
+      if(extracted.apoliceNumero || extracted.apoliceVigenciaFim){
+        foundPolicy = {id:uid(), clientId:c.id, tipo:extracted.apoliceTipo||'Auto', numero:extracted.apoliceNumero||'',
+          seguradora:extracted.apoliceSeguradora||'', grupo:extracted.apoliceGrupo||'',
+          vigenciaInicio:extracted.apoliceVigenciaInicio||'', vigenciaFim:extracted.apoliceVigenciaFim||''};
+        const exists = state.policies.some(p=>p.clientId===c.id && p.numero && p.numero===foundPolicy.numero);
+        if(!exists && foundPolicy.numero){ state.policies.push(foundPolicy); await savePolicies(); }
+      }
+    }
+    await saveClients();
+    state.driveStatusMsg = `Extração concluída: ${filledCount} campo(s) preenchido(s) para ${c.nome}.`;
+  }catch(e){
+    state.driveStatusMsg = 'Erro na extração: '+e.message;
+  }
+  state.driveBusy=false; render();
+}
+
+function viewConfig(){
+  const connected = !!state.driveAccessToken;
+  return `
+  <div class="topbar"><div><h1>Configurações</h1><div class="sub">Conecte o sistema ao Google Drive do cliente/corretor</div></div></div>
+  <div class="notice"><b>Antes de conectar:</b> este recurso exige um Client ID OAuth do Google (gratuito) e que este arquivo esteja
+  sendo aberto por um endereço <code>http://</code> ou <code>https://</code> — não funciona abrindo o arquivo direto do disco (<code>file://</code>).
+  Passo a passo: 1) acesse console.cloud.google.com e crie um projeto · 2) ative a "Google Drive API" · 3) configure a "tela de consentimento OAuth" (modo externo, adicione seu e-mail como testador) ·
+  4) crie uma credencial "ID do cliente OAuth" do tipo "Aplicativo da Web" · 5) em "Origens JavaScript autorizadas" adicione o endereço onde este arquivo está hospedado · 6) copie o Client ID gerado e cole abaixo.</div>
+  <div class="card" style="margin-bottom:16px;">
+    <h3 style="font-size:15px;margin-bottom:14px;">Conexão</h3>
+    <div class="form-grid">
+      <div class="field full"><label>Client ID do Google (OAuth)</label><input id="cfg-clientid" placeholder="xxxxxxxx.apps.googleusercontent.com" value="${state.driveConfig.clientId||''}"></div>
+      <div class="field full"><label>Pasta raiz de clientes no Drive (ID ou link)</label><input id="cfg-folder" placeholder="Cole o link da pasta principal de clientes" value="${state.driveConfig.rootFolderId||''}"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap;">
+      <button class="btn-primary" id="btn-save-config">Salvar configuração</button>
+      <button class="btn-ghost" id="btn-connect-drive">${connected?'Reconectar':'Conectar ao Google Drive'}</button>
+      <span class="status-pill ${connected?'on':'off'}"><span class="dot-status"></span>${connected?'Conectado':'Não conectado'}</span>
+    </div>
+    ${state.driveStatusMsg?`<div style="margin-top:12px;font-size:12.5px;color:var(--ink-soft);">${state.driveBusy?'⏳ ':''}${state.driveStatusMsg}</div>`:''}
+  </div>
+  <div class="card">
+    <h3 style="font-size:15px;margin-bottom:6px;">Atualizar clientes a partir do Drive</h3>
+    <div style="color:var(--ink-soft);font-size:12.5px;margin-bottom:14px;">Cada subpasta dentro da pasta raiz vira um cliente (o nome da subpasta é usado como nome do cliente). Clientes já existentes com o mesmo nome apenas têm os arquivos atualizados.</div>
+    <button class="btn-primary" id="btn-scan-drive" ${connected?'':'disabled'}>${state.driveBusy?'Buscando...':'Atualizar do Drive agora'}</button>
+  </div>`;
+}
+
+// ---------- oportunidades ----------
+function viewOportunidades(){
+  const cards = state.clients.map(c=>{
+    const missing = PRODUCT_TYPES.filter(p=>!(c.produtos||[]).includes(p));
+    if(missing.length===0) return '';
+    return `<div class="opp-card">
+      <div><div class="prod">${c.nome}</div><div style="color:var(--ink-soft);font-size:12.5px;">tem: ${(c.produtos||[]).join(', ')||'nenhum produto'}</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:280px;">${missing.map(m=>`<span class="tag amber">${m}</span>`).join('')}
+      <span class="link" data-open-client="${c.id}" style="display:block;width:100%;text-align:right;margin-top:4px;">ver cliente →</span></div>
+    </div>`;
+  }).filter(Boolean).join('');
+  return `
+  <div class="topbar"><div><h1>Oportunidades</h1><div class="sub">Sugestões de produtos por perfil de cliente — cross-sell entre auto, vida, consórcio, empresarial e residencial</div></div></div>
+  <div class="card">${cards||emptyState('Nenhuma oportunidade no momento','Todos os clientes já têm os 5 produtos, ou não há clientes cadastrados.')}</div>
+  <div class="card" style="margin-top:16px;">
+    <h3 style="font-size:14px;margin-bottom:8px;">Outras linhas para oferecer à base</h3>
+    <div style="color:var(--ink-soft);font-size:13px;line-height:1.6;">Investimento · Consórcio data certa · Financiamento — use o campo "Notas" na ficha do cliente para registrar o que já foi ofertado e a reação do cliente.</div>
+  </div>`;
+}
+
+// ---------- modal helpers ----------
+function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
+
+// ---------- events ----------
+function attachHandlers(){
+  document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>{state.view=n.dataset.view; render();});
+  document.querySelectorAll('[data-open-client]').forEach(n=>n.onclick=()=>{state.currentClientId=n.dataset.openClient; state.clientTab='dados'; state.view='clientDetail'; render();});
+  const back=document.getElementById('btn-back-clients'); if(back) back.onclick=()=>{state.view='clientes'; render();};
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{state.clientTab=t.dataset.tab; render();});
+
+  const newClientBtn=document.getElementById('btn-new-client'); if(newClientBtn) newClientBtn.onclick=()=>openClientModal(null);
+  const editClientBtn=document.getElementById('btn-edit-client'); if(editClientBtn) editClientBtn.onclick=()=>openClientModal(editClientBtn.dataset.id);
+  const delClientBtn=document.getElementById('btn-del-client'); if(delClientBtn) delClientBtn.onclick=async()=>{
+    if(confirm('Excluir este cliente e todos os dados relacionados (apólices, interações)?')){
+      const id=delClientBtn.dataset.id;
+      state.clients=state.clients.filter(c=>c.id!==id);
+      state.policies=state.policies.filter(p=>p.clientId!==id);
+      state.interactions=state.interactions.filter(i=>i.clientId!==id);
+      await saveClients(); await savePolicies(); await saveInteractions();
+      state.view='clientes'; render();
+    }
+  };
+
+  const newPolicyBtn=document.getElementById('btn-new-policy'); if(newPolicyBtn) newPolicyBtn.onclick=()=>openPolicyModal(state.currentClientId,null);
+  const newPolicyGlobalBtn=document.getElementById('btn-new-policy-global'); if(newPolicyGlobalBtn) newPolicyGlobalBtn.onclick=()=>openPolicyModal(null,null);
+  document.querySelectorAll('[data-edit-policy]').forEach(n=>n.onclick=()=>openPolicyModal(null,n.dataset.editPolicy));
+  document.querySelectorAll('[data-del-policy]').forEach(n=>n.onclick=async()=>{
+    if(confirm('Excluir esta apólice?')){ state.policies=state.policies.filter(p=>p.id!==n.dataset.delPolicy); await savePolicies(); render(); }
+  });
+
+  const newInterBtn=document.getElementById('btn-new-interaction'); if(newInterBtn) newInterBtn.onclick=()=>openInteractionModal(state.currentClientId,null);
+  const newInterGlobalBtn=document.getElementById('btn-new-interaction-global'); if(newInterGlobalBtn) newInterGlobalBtn.onclick=()=>openInteractionModal(null,null);
+  document.querySelectorAll('[data-edit-interaction]').forEach(n=>n.onclick=()=>openInteractionModal(null,n.dataset.editInteraction));
+  document.querySelectorAll('[data-del-interaction]').forEach(n=>n.onclick=async()=>{
+    if(confirm('Excluir esta interação?')){ state.interactions=state.interactions.filter(i=>i.id!==n.dataset.delInteraction); await saveInteractions(); render(); }
+  });
+
+  const saveConfigBtn=document.getElementById('btn-save-config'); if(saveConfigBtn) saveConfigBtn.onclick=async()=>{
+    state.driveConfig.clientId=document.getElementById('cfg-clientid').value.trim();
+    state.driveConfig.rootFolderId=extractFolderId(document.getElementById('cfg-folder').value.trim());
+    await saveDriveConfig();
+    gisTokenClient=null;
+    state.driveStatusMsg='Configuração salva.';
+    render();
+  };
+  const connectDriveBtn=document.getElementById('btn-connect-drive'); if(connectDriveBtn) connectDriveBtn.onclick=connectDrive;
+  const scanDriveBtn=document.getElementById('btn-scan-drive'); if(scanDriveBtn) scanDriveBtn.onclick=scanDriveForClients;
+  const extractClientBtn=document.getElementById('btn-extract-client'); if(extractClientBtn) extractClientBtn.onclick=()=>extractClientFromDrive(extractClientBtn.dataset.id);
+
+  const cancelBtn=document.getElementById('btn-cancel'); if(cancelBtn) cancelBtn.onclick=closeModal;
+  const saveClientBtn=document.getElementById('btn-save-client'); if(saveClientBtn) saveClientBtn.onclick=()=>saveClientFromForm(saveClientBtn.dataset.id||null);
+  const savePolicyBtn=document.getElementById('btn-save-policy'); if(savePolicyBtn) savePolicyBtn.onclick=()=>savePolicyFromForm(savePolicyBtn.dataset.id||null);
+  const saveInterBtn=document.getElementById('btn-save-interaction'); if(saveInterBtn) saveInterBtn.onclick=()=>saveInteractionFromForm(saveInterBtn.dataset.id||null);
+}
+
+document.getElementById('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeModal(); });
+
+// ---------- boot ----------
+(async function(){
+  document.getElementById('main').innerHTML='<div class="empty">Carregando...</div>';
+  await loadAll();
+  render();
+})();
+</script>
+</body>
+</html>

@@ -258,8 +258,8 @@ function viewClientes(){
       else renewalTag='<span class="tag teal">ok</span>';
     }
     return `<tr>
-      <td><span class="link" data-open-client="${c.id}">${c.nome||'(sem nome)'}</span></td>
-      <td>${c.cpf||'—'}</td>
+      <td><span class="link" data-open-client="${c.id}">${c.nome||'(sem nome)'}</span> <span class="tag ${c.tipoCliente==='PJ'?'grey':'teal'}" style="margin-left:4px;">${c.tipoCliente==='PJ'?'PJ':'PF'}</span></td>
+      <td>${c.tipoCliente==='PJ' ? (c.cnpj||'—') : (c.cpf||'—')}</td>
       <td>${c.fone||'—'}</td>
       <td>${(c.produtos||[]).join(', ')||'—'}</td>
       <td>${pol.length}</td>
@@ -273,7 +273,7 @@ function viewClientes(){
   </div>
   <div class="card">
     ${state.clients.length===0? emptyState('Nenhum cliente cadastrado','Cadastre seu primeiro cliente para começar a controlar a base.') : `
-    <table><thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Produtos</th><th>Apólices</th><th>Renovação</th></tr></thead>
+    <table><thead><tr><th>Nome</th><th>CPF/CNPJ</th><th>Telefone</th><th>Produtos</th><th>Apólices</th><th>Renovação</th></tr></thead>
     <tbody>${rows}</tbody></table>`}
   </div>`;
 }
@@ -285,27 +285,47 @@ function emptyState(title,sub){
 function clientFormFields(c={}){
   c=c||{};
   const v=c.veiculo||{}; const e=c.esposa||{};
+  const tipo = c.tipoCliente || 'PF';
   const fieldsProdutos = PRODUCT_TYPES.map(p=>`<label style="display:inline-flex;align-items:center;gap:5px;font-weight:400;font-size:12.5px;margin-right:12px;">
     <input type="checkbox" style="width:auto;" value="${p}" ${((c.produtos||[]).includes(p))?'checked':''} class="chk-produto">${p}</label>`).join('');
   return `
   <div class="form-grid">
-    <div class="section-title">Dados pessoais</div>
-    <div class="field"><label>Nome completo</label><input id="f-nome" value="${c.nome||''}"></div>
-    <div class="field"><label>CPF</label><input id="f-cpf" value="${c.cpf||''}"></div>
-    <div class="field"><label>RG</label><input id="f-rg" value="${c.rg||''}"></div>
-    <div class="field"><label>Data de emissão RG</label><input type="date" id="f-rgData" value="${c.rgData||''}"></div>
+    <div class="field full">
+      <label>Tipo de cliente</label>
+      <select id="f-tipoCliente">
+        <option value="PF" ${tipo==='PF'?'selected':''}>Pessoa Física</option>
+        <option value="PJ" ${tipo==='PJ'?'selected':''}>Pessoa Jurídica (empresa)</option>
+      </select>
+    </div>
+    <div class="field"><label id="lbl-nome">Nome completo</label><input id="f-nome" value="${c.nome||''}"></div>
     <div class="field"><label>Telefone</label><input id="f-fone" value="${c.fone||''}"></div>
     <div class="field"><label>Email</label><input id="f-email" value="${c.email||''}"></div>
     <div class="field full"><label>Endereço completo com CEP</label><input id="f-endereco" value="${c.endereco||''}"></div>
-    <div class="field"><label>Data de nascimento</label><input type="date" id="f-nascimento" value="${c.nascimento||''}"></div>
-    <div class="field"><label>Nome da mãe</label><input id="f-mae" value="${c.mae||''}"></div>
+
+    <div class="section-title grp-pf">Dados pessoais</div>
+    <div class="field grp-pf"><label>CPF</label><input id="f-cpf" value="${c.cpf||''}"></div>
+    <div class="field grp-pf"><label>RG</label><input id="f-rg" value="${c.rg||''}"></div>
+    <div class="field grp-pf"><label>Data de emissão RG</label><input type="date" id="f-rgData" value="${c.rgData||''}"></div>
+    <div class="field grp-pf"><label>Data de nascimento</label><input type="date" id="f-nascimento" value="${c.nascimento||''}"></div>
+    <div class="field grp-pf"><label>Nome da mãe</label><input id="f-mae" value="${c.mae||''}"></div>
+
+    <div class="section-title grp-pj">Dados da empresa</div>
+    <div class="field grp-pj"><label>CNPJ</label><input id="f-cnpj" value="${c.cnpj||''}"></div>
+    <div class="field grp-pj"><label>Nome fantasia</label><input id="f-nomeFantasia" value="${c.nomeFantasia||''}"></div>
+    <div class="field grp-pj"><label>Inscrição estadual</label><input id="f-inscEstadual" value="${c.inscEstadual||''}"></div>
+    <div class="field grp-pj"><label>Inscrição municipal</label><input id="f-inscMunicipal" value="${c.inscMunicipal||''}"></div>
+    <div class="field grp-pj"><label>Data de abertura</label><input type="date" id="f-dataAbertura" value="${c.dataAbertura||''}"></div>
+    <div class="field grp-pj"><label>Ramo de atividade</label><input id="f-ramoAtividade" value="${c.ramoAtividade||''}"></div>
+    <div class="field grp-pj full"><label>Responsável legal (nome)</label><input id="f-respNome" value="${c.respNome||''}"></div>
+    <div class="field grp-pj"><label>CPF do responsável</label><input id="f-respCpf" value="${c.respCpf||''}"></div>
+    <div class="field grp-pj"><label>Cargo do responsável</label><input id="f-respCargo" value="${c.respCargo||''}"></div>
 
     <div class="section-title">Dados financeiros</div>
     <div class="field full"><label>Conta corrente (banco / agência / conta)</label><input id="f-conta" value="${c.conta||''}"></div>
     <div class="field full"><label>Cartão de crédito (bandeira / número / validade / nome impresso)</label><input id="f-cartao" value="${c.cartao||''}"></div>
 
-    <div class="section-title">CNH</div>
-    <div class="field"><label>Validade da CNH</label><input type="date" id="f-cnh" value="${c.cnh||''}"></div>
+    <div class="section-title grp-pf">CNH</div>
+    <div class="field grp-pf"><label>Validade da CNH</label><input type="date" id="f-cnh" value="${c.cnh||''}"></div>
 
     <div class="section-title">Veículo</div>
     <div class="field"><label>Placa</label><input id="f-placa" value="${v.placa||''}"></div>
@@ -315,10 +335,10 @@ function clientFormFields(c={}){
     <div class="field"><label>Ano/modelo</label><input id="f-anomodelo" value="${v.anoModelo||''}"></div>
     <div class="field"><label>Data de licenciamento</label><input type="date" id="f-licenciamento" value="${v.licenciamento||''}"></div>
 
-    <div class="section-title">Cônjuge</div>
-    <div class="field"><label>Nome</label><input id="f-esposaNome" value="${e.nome||''}"></div>
-    <div class="field"><label>CPF</label><input id="f-esposaCpf" value="${e.cpf||''}"></div>
-    <div class="field"><label>Data de nascimento</label><input type="date" id="f-esposaNascimento" value="${e.nascimento||''}"></div>
+    <div class="section-title grp-pf">Cônjuge</div>
+    <div class="field grp-pf"><label>Nome</label><input id="f-esposaNome" value="${e.nome||''}"></div>
+    <div class="field grp-pf"><label>CPF</label><input id="f-esposaCpf" value="${e.cpf||''}"></div>
+    <div class="field grp-pf"><label>Data de nascimento</label><input type="date" id="f-esposaNascimento" value="${e.nascimento||''}"></div>
 
     <div class="section-title">Produtos contratados</div>
     <div class="field full">${fieldsProdutos}</div>
@@ -326,6 +346,15 @@ function clientFormFields(c={}){
     <div class="section-title">Observações / sugestões</div>
     <div class="field full"><label>Notas gerais e sugestões de produtos (investimento, consórcio data certa, financiamento...)</label><textarea id="f-notas" rows="3">${c.notas||''}</textarea></div>
   </div>`;
+}
+
+function toggleClientTypeGroups(){
+  const sel=document.getElementById('f-tipoCliente');
+  if(!sel) return;
+  const isPJ = sel.value==='PJ';
+  document.querySelectorAll('.grp-pf').forEach(el=>el.style.display = isPJ?'none':'');
+  document.querySelectorAll('.grp-pj').forEach(el=>el.style.display = isPJ?'':'none');
+  const lbl=document.getElementById('lbl-nome'); if(lbl) lbl.textContent = isPJ?'Razão social':'Nome completo';
 }
 
 function openClientModal(id){
@@ -341,21 +370,27 @@ function openClientModal(id){
   document.getElementById('overlay').classList.add('show');
   document.getElementById('btn-cancel').onclick=closeModal;
   document.getElementById('btn-save-client').onclick=()=>saveClientFromForm(id||null);
+  document.getElementById('f-tipoCliente').onchange=toggleClientTypeGroups;
+  toggleClientTypeGroups();
 }
 
 async function saveClientFromForm(id){
   const g=k=>document.getElementById(k).value;
   const produtos=[...document.querySelectorAll('.chk-produto:checked')].map(x=>x.value);
+  const tipoCliente=g('f-tipoCliente');
   const data={
-    id: id||uid(),
-    nome:g('f-nome'), cpf:g('f-cpf'), rg:g('f-rg'), rgData:g('f-rgData'),
-    fone:g('f-fone'), email:g('f-email'), endereco:g('f-endereco'), nascimento:g('f-nascimento'),
-    mae:g('f-mae'), conta:g('f-conta'), cartao:g('f-cartao'), cnh:g('f-cnh'),
+    id: id||uid(), tipoCliente,
+    nome:g('f-nome'), fone:g('f-fone'), email:g('f-email'), endereco:g('f-endereco'),
+    cpf:g('f-cpf'), rg:g('f-rg'), rgData:g('f-rgData'), nascimento:g('f-nascimento'), mae:g('f-mae'),
+    cnpj:g('f-cnpj'), nomeFantasia:g('f-nomeFantasia'), inscEstadual:g('f-inscEstadual'), inscMunicipal:g('f-inscMunicipal'),
+    dataAbertura:g('f-dataAbertura'), ramoAtividade:g('f-ramoAtividade'),
+    respNome:g('f-respNome'), respCpf:g('f-respCpf'), respCargo:g('f-respCargo'),
+    conta:g('f-conta'), cartao:g('f-cartao'), cnh:g('f-cnh'),
     veiculo:{placa:g('f-placa'),renavam:g('f-renavam'),cor:g('f-cor'),tipo:g('f-tipoveiculo'),anoModelo:g('f-anomodelo'),licenciamento:g('f-licenciamento')},
     esposa:{nome:g('f-esposaNome'),cpf:g('f-esposaCpf'),nascimento:g('f-esposaNascimento')},
     produtos, notas:g('f-notas')
   };
-  if(!data.nome){ alert('Informe o nome do cliente.'); return; }
+  if(!data.nome){ alert(tipoCliente==='PJ' ? 'Informe a razão social da empresa.' : 'Informe o nome do cliente.'); return; }
   const idx=state.clients.findIndex(x=>x.id===data.id);
   if(idx>=0) state.clients[idx]=data; else state.clients.push(data);
   await saveClients();
@@ -373,6 +408,25 @@ function viewClientDetail(){
 
   let tabContent='';
   if(state.clientTab==='dados'){
+    if(c.tipoCliente==='PJ'){
+      tabContent=`<div class="kv">
+        ${kvItem('CNPJ',c.cnpj)}${kvItem('Nome fantasia',c.nomeFantasia)}
+        ${kvItem('Inscrição estadual',c.inscEstadual)}${kvItem('Inscrição municipal',c.inscMunicipal)}
+        ${kvItem('Data de abertura',fmtDate(c.dataAbertura))}${kvItem('Ramo de atividade',c.ramoAtividade)}
+        ${kvItem('Telefone',c.fone)}${kvItem('Email',c.email)}
+        ${kvItem('Endereço',c.endereco)}${kvItem('Conta corrente',c.conta)}
+        ${kvItem('Cartão de crédito',c.cartao)}
+      </div>
+      <h3 style="font-size:14px;margin:18px 0 8px;">Responsável legal</h3>
+      <div class="kv">${kvItem('Nome',c.respNome)}${kvItem('CPF',c.respCpf)}${kvItem('Cargo',c.respCargo)}</div>
+      <h3 style="font-size:14px;margin:18px 0 8px;">Veículo</h3>
+      <div class="kv">
+        ${kvItem('Placa',v.placa)}${kvItem('Renavam',v.renavam)}
+        ${kvItem('Cor',v.cor)}${kvItem('Tipo',v.tipo)}
+        ${kvItem('Ano/modelo',v.anoModelo)}${kvItem('Licenciamento',fmtDate(v.licenciamento))}
+      </div>
+      ${c.notas?`<h3 style="font-size:14px;margin:18px 0 8px;">Notas</h3><div style="white-space:pre-wrap;color:var(--ink-soft);">${c.notas}</div>`:''}`;
+    } else {
     tabContent=`<div class="kv">
       ${kvItem('CPF',c.cpf)}${kvItem('RG',c.rg+(c.rgData?(' · emissão '+fmtDate(c.rgData)):''))}
       ${kvItem('Telefone',c.fone)}${kvItem('Email',c.email)}
@@ -389,6 +443,7 @@ function viewClientDetail(){
     <h3 style="font-size:14px;margin:18px 0 8px;">Cônjuge</h3>
     <div class="kv">${kvItem('Nome',e.nome)}${kvItem('CPF',e.cpf)}${kvItem('Nascimento',fmtDate(e.nascimento))}</div>
     ${c.notas?`<h3 style="font-size:14px;margin:18px 0 8px;">Notas</h3><div style="white-space:pre-wrap;color:var(--ink-soft);">${c.notas}</div>`:''}`;
+    }
   } else if(state.clientTab==='apolices'){
     tabContent=`<div class="toolbar" style="justify-content:flex-end;"><button class="btn-primary" id="btn-new-policy">+ Nova apólice</button></div>
     ${pol.length===0?emptyState('Nenhuma apólice','Cadastre a primeira apólice deste cliente.'):renderPolicyTable(pol,false)}`;
@@ -417,8 +472,9 @@ function viewClientDetail(){
   return `
   <div class="detail-header">
     <div><button class="btn-ghost" id="btn-back-clients" style="margin-bottom:10px;">← Voltar</button>
-      <h2>${c.nome}</h2><div class="meta">${c.cpf||'sem CPF'} · ${c.fone||'sem telefone'}</div></div>
-    <div style="display:flex;gap:8px;">
+      <h2>${c.nome}</h2><div class="meta">${c.tipoCliente==='PJ'?(c.cnpj||'sem CNPJ'):(c.cpf||'sem CPF')} · ${c.fone||'sem telefone'}</div></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span class="tag ${c.tipoCliente==='PJ'?'grey':'teal'}">${c.tipoCliente==='PJ'?'Pessoa Jurídica':'Pessoa Física'}</span>
       <button class="btn-ghost" id="btn-edit-client" data-id="${c.id}">Editar</button>
       <button class="btn-danger" id="btn-del-client" data-id="${c.id}">Excluir</button>
     </div>
@@ -585,12 +641,12 @@ async function driveFetch(url){
 }
 async function listSubfolders(folderId){
   const q=encodeURIComponent(`'${folderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`);
-  const data = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&pageSize=200`);
+  const data = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives`);
   return data.files||[];
 }
 async function listFilesInFolder(folderId){
   const q=encodeURIComponent(`'${folderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`);
-  const data = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType)&pageSize=200`);
+  const data = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType)&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives`);
   return data.files||[];
 }
 async function scanDriveForClients(){
@@ -613,7 +669,9 @@ async function scanDriveForClients(){
       }
     }
     await saveClients();
-    state.driveStatusMsg = `Varredura concluída: ${folders.length} pasta(s) encontrada(s) · ${novos} cliente(s) novo(s) · ${atualizados} atualizado(s).`;
+    state.driveStatusMsg = folders.length===0
+      ? 'Nenhuma subpasta encontrada dentro da pasta raiz. Verifique se já existem pastas de clientes lá dentro e se o ID/link da pasta raiz está correto.'
+      : `Varredura concluída: ${folders.length} pasta(s) encontrada(s) · ${novos} cliente(s) novo(s) · ${atualizados} atualizado(s).`;
   }catch(e){
     state.driveStatusMsg = 'Erro ao buscar no Drive: '+e.message;
   }
@@ -641,7 +699,8 @@ async function downloadDriveFile(file){
   const base64 = await blobToBase64(blob);
   return {base64, mimeType: blob.type || file.mimeType};
 }
-const CLIENT_FIELD_KEYS = ['nome','cpf','rg','rgData','fone','email','endereco','nascimento','mae','conta','cartao','cnh',
+const CLIENT_FIELD_KEYS = ['tipoCliente(PF ou PJ)','nome','cpf','rg','rgData','fone','email','endereco','nascimento','mae','conta','cartao','cnh',
+  'cnpj','nomeFantasia','inscEstadual','inscMunicipal','dataAbertura','ramoAtividade','respNome','respCpf','respCargo',
   'placa','renavam','cor','tipoVeiculo','anoModelo','licenciamento','esposaNome','esposaCpf','esposaNascimento',
   'apoliceNumero','apoliceTipo','apoliceSeguradora','apoliceGrupo','apoliceVigenciaInicio','apoliceVigenciaFim'];
 async function extractFieldsFromFile(file){
@@ -652,7 +711,7 @@ async function extractFieldsFromFile(file){
   if(isPdf) contentBlock = {type:'document', source:{type:'base64', media_type:'application/pdf', data:base64}};
   else if(isImage) contentBlock = {type:'image', source:{type:'base64', media_type:mimeType, data:base64}};
   else contentBlock = {type:'text', text: atob(base64)};
-  const prompt = `Extraia deste documento os dados de um cliente de corretora de seguros, se existirem. Responda SOMENTE com um JSON válido, sem markdown e sem texto fora do JSON, com exatamente estas chaves (use "" quando não encontrar): ${CLIENT_FIELD_KEYS.join(', ')}. Datas no formato AAAA-MM-DD.`;
+  const prompt = `Extraia deste documento os dados de um cliente de corretora de seguros, se existirem. O cliente pode ser pessoa física (CPF) ou pessoa jurídica/empresa (CNPJ) — identifique qual é o caso pelo documento (se tiver CNPJ, é PJ). Responda SOMENTE com um JSON válido, sem markdown e sem texto fora do JSON, com exatamente estas chaves (use "" quando não encontrar): ${CLIENT_FIELD_KEYS.join(', ')}. No campo tipoCliente responda apenas "PF" ou "PJ". Datas no formato AAAA-MM-DD.`;
   const resp = await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({model:'claude-sonnet-4-6', max_tokens:1000,
@@ -673,10 +732,14 @@ async function extractClientFromDrive(clientId){
       const extracted = await extractFieldsFromFile(f);
       if(!extracted) continue;
       const setIfEmpty=(k,v)=>{ if(v && !c[k]){ c[k]=v; filledCount++; } };
+      if((extracted.tipoCliente==='PJ' || extracted.tipoCliente==='PF') && !c.tipoCliente){ c.tipoCliente=extracted.tipoCliente; filledCount++; }
       setIfEmpty('nome',extracted.nome); setIfEmpty('cpf',extracted.cpf); setIfEmpty('rg',extracted.rg);
       setIfEmpty('rgData',extracted.rgData); setIfEmpty('fone',extracted.fone); setIfEmpty('email',extracted.email);
       setIfEmpty('endereco',extracted.endereco); setIfEmpty('nascimento',extracted.nascimento); setIfEmpty('mae',extracted.mae);
       setIfEmpty('conta',extracted.conta); setIfEmpty('cartao',extracted.cartao); setIfEmpty('cnh',extracted.cnh);
+      setIfEmpty('cnpj',extracted.cnpj); setIfEmpty('nomeFantasia',extracted.nomeFantasia); setIfEmpty('inscEstadual',extracted.inscEstadual);
+      setIfEmpty('inscMunicipal',extracted.inscMunicipal); setIfEmpty('dataAbertura',extracted.dataAbertura); setIfEmpty('ramoAtividade',extracted.ramoAtividade);
+      setIfEmpty('respNome',extracted.respNome); setIfEmpty('respCpf',extracted.respCpf); setIfEmpty('respCargo',extracted.respCargo);
       c.veiculo = c.veiculo||{};
       const setVeiculoIfEmpty=(k,v)=>{ if(v && !c.veiculo[k]){ c.veiculo[k]=v; filledCount++; } };
       setVeiculoIfEmpty('placa',extracted.placa); setVeiculoIfEmpty('renavam',extracted.renavam); setVeiculoIfEmpty('cor',extracted.cor);
